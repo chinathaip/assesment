@@ -14,23 +14,11 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func GetAllExpenses(c echo.Context) error {
-	return c.JSON(http.StatusOK, db.Expense{
-		ID:     1,
-		Title:  "test title",
-		Amount: 13.5,
-		Note:   "test note",
-		Tags:   []string{"tag1", "tag2"},
-	})
-}
-
 func main() {
 	db.CreateTable()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
-
-	e.GET("/expenses", GetAllExpenses)
 
 	//graceful shutdown
 	signals := make(chan os.Signal, 1)
