@@ -73,7 +73,6 @@ func TestAddNewExpense(t *testing.T) {
 	srv := setup()
 	defer teardown(srv)
 
-	//Create a real struct out of this and reuse it with other tests
 	tests := []struct {
 		TestName string
 		Input    interface{}
