@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// MIGRATE MOCKHANDLER(), NewServer, srv.Close() as Setup-Teardown
 func MockHandler() *echo.Echo {
 	e := echo.New()
 
@@ -29,10 +30,25 @@ func MockHandler() *echo.Echo {
 		query := c.Param("id")
 		id, _ := strconv.Atoi(query)
 
-		fmt.Printf("QUERY IS : %v", id)
 		if id == 0 {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
+		return c.JSON(http.StatusOK, "OK")
+	})
+
+	e.PUT("/expenses/:id", func(c echo.Context) error {
+		query := c.Param("id")
+		id, _ := strconv.Atoi(query)
+
+		if id == 0 {
+			return c.JSON(http.StatusBadRequest, "bad request")
+		}
+
+		expense := db.Expense{}
+		if err := c.Bind(&expense); err != nil {
+			return c.JSON(http.StatusBadRequest, "bad request")
+		}
+
 		return c.JSON(http.StatusOK, "OK")
 	})
 
@@ -44,6 +60,8 @@ func TestAddNewExpense(t *testing.T) {
 	handler := MockHandler()
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
+
+	//Create a real struct out of this and reuse it with other tests
 	tests := []struct {
 		TestName string
 		Input    interface{}
@@ -111,10 +129,75 @@ func TestGetExpenseById(t *testing.T) {
 			url := fmt.Sprint(srv.URL + "/expenses/" + test.Input)
 			//act
 			resp, err := http.Get(url)
-			fmt.Printf("URL IS %v\n", url)
 			//assert
 			assert.Equal(t, test.Expect, resp.StatusCode)
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestUpdateExpenseById(t *testing.T) {
+	handler := MockHandler()
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
+
+	tests := []struct {
+		TestName string
+		ID       string
+		Body     interface{}
+		Expect   int
+	}{
+		{
+			TestName: "valid id and body should get status OK",
+			ID:       "1",
+			Body: db.Expense{
+				ID:     1,
+				Title:  "hi",
+				Amount: 1.4,
+				Note:   "some note",
+				Tags:   []string{"tag1", "tag2"},
+			},
+			Expect: http.StatusOK,
+		},
+		{
+			TestName: "valid id but invalid body should get status bad request",
+			ID:       "1",
+			Body:     "ayoyoyo",
+			Expect:   http.StatusBadRequest,
+		},
+		{
+			TestName: "invalid id but valid body should get status bad request",
+			ID:       "hello test tset test",
+			Body: db.Expense{
+				ID:     1,
+				Title:  "hi",
+				Amount: 1.4,
+				Note:   "some note",
+				Tags:   []string{"tag1", "tag2"},
+			},
+			Expect: http.StatusBadRequest,
+		},
+		{
+			TestName: "invalid id and invalid body should get status bad request",
+			ID:       "hello test tset test",
+			Body:     "test again ",
+			Expect:   http.StatusBadRequest,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.TestName, func(t *testing.T) {
+			url := fmt.Sprint(srv.URL + "/expenses/" + test.ID)
+			body, _ := json.Marshal(test.Body)
+			req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, erro := client.Do(req)
+
+			assert.Equal(t, test.Expect, resp.StatusCode)
+			assert.NoError(t, err)
+			assert.NoError(t, erro)
 		})
 	}
 }
