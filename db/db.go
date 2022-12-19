@@ -64,7 +64,7 @@ func GetExpenseById(id int) (*Expense, error) {
 	var tags []string
 	err := row.Scan(&eid, &title, &amount, &note, pq.Array(&tags))
 	if err != nil {
-		log.Printf("error retriving expense by id %v", err)
+		log.Printf("error retriving expense by id %v\n", err)
 		return nil, err
 	}
 	return &Expense{ID: eid, Title: title, Amount: amount, Note: note, Tags: tags}, nil
@@ -76,8 +76,32 @@ func UpdateExpenseById(id int, expense Expense) (*Expense, error) {
 	_, err := DB.Exec("UPDATE expenses SET id = $1, title = $2, amount = $3, note = $4, tags = $5 WHERE id = $6",
 		expense.ID, expense.Title, expense.Amount, expense.Note, pq.Array(&tags), id)
 	if err != nil {
-		log.Printf("error updating expense %v", err)
+		log.Printf("error updating expense %v\n", err)
 		return nil, err
 	}
 	return &expense, nil
+}
+
+func GetAllExpenses() ([]Expense, error) {
+	rows, err := DB.Query("SELECT * FROM expenses")
+	if err != nil {
+		log.Printf("error retrieving expenses %v\n", err)
+		return nil, err
+	}
+	expenses := []Expense{}
+
+	for rows.Next() {
+		var eid int64
+		var title string
+		var amount float64
+		var note string
+		var tags []string
+		erro := rows.Scan(&eid, &title, &amount, &note, pq.Array(&tags))
+		if erro != nil {
+			log.Printf("error scanning row %v\n", erro)
+			return nil, erro
+		}
+		expenses = append(expenses, Expense{ID: eid, Title: title, Amount: amount, Note: note, Tags: tags})
+	}
+	return expenses, nil
 }

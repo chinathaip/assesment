@@ -17,6 +17,7 @@ func CreateMainHandler() *echo.Echo {
 	e.POST("/expenses", AddNewExpense)
 	e.GET("/expenses/:id", GetExpenseById)
 	e.PUT("/expenses/:id", UpdateExpenseById)
+	e.GET("/expenses", GetAllExpenses)
 
 	return e
 }
@@ -54,4 +55,12 @@ func UpdateExpenseById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, erro)
 	}
 	return c.JSON(http.StatusOK, response)
+}
+
+func GetAllExpenses(c echo.Context) error {
+	expenses, err := db.GetAllExpenses()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "something is wrong on our end, try again later")
+	}
+	return c.JSON(http.StatusOK, expenses)
 }
