@@ -51,3 +51,19 @@ func InsertExpense(expense *Expense) Expense {
 	expense.ID = int64(lastInsertId)
 	return *expense
 }
+
+func GetExpenseById(id int) (*Expense, error) {
+	row := DB.QueryRow("SELECT id, title, amount, note FROM expenses WHERE ID = $1", id)
+
+	var eid int64
+	var title string
+	var amount float64
+	var note string
+	// var tags []string
+	err := row.Scan(&eid, &title, &amount, &note)
+	if err != nil {
+		log.Printf("error retriving user by id %v", err)
+		return nil, err
+	}
+	return &Expense{ID: eid, Title: title, Amount: amount, Note: note}, nil
+}
