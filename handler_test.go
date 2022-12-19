@@ -26,6 +26,10 @@ func MockHandler() *echo.Echo {
 		return c.JSON(http.StatusCreated, expense)
 	})
 
+	e.GET("/expenses", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, "OK")
+	})
+
 	e.GET("/expenses/:id", func(c echo.Context) error {
 		query := c.Param("id")
 		id, _ := strconv.Atoi(query)
@@ -201,4 +205,19 @@ func TestUpdateExpenseById(t *testing.T) {
 			assert.NoError(t, erro)
 		})
 	}
+}
+
+func TestGetAllExpense(t *testing.T) {
+	t.Run("Normal server return status OK", func(t *testing.T) {
+		handler := MockHandler()
+		srv := httptest.NewServer(handler)
+		defer srv.Close()
+
+		url := fmt.Sprint(srv.URL + "/expenses")
+		resp, err := http.Get(url)
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.NoError(t, err)
+
+	})
 }
