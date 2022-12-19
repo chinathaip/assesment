@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,9 +14,9 @@ func CreateMainHandler() *echo.Echo {
 	e.Use(middleware.Logger())
 
 	e.POST("/expenses", AddNewExpense)
+	e.GET("/expenses", GetAllExpenses)
 	e.GET("/expenses/:id", GetExpenseById)
 	e.PUT("/expenses/:id", UpdateExpenseById)
-	e.GET("/expenses", GetAllExpenses)
 
 	return e
 }
@@ -34,7 +33,6 @@ func AddNewExpense(c echo.Context) error {
 func GetExpenseById(c echo.Context) error {
 	query := c.Param("id")
 	id, _ := strconv.Atoi(query)
-	fmt.Println(id)
 	expense, err := db.GetExpenseById(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "bad request")
@@ -46,13 +44,12 @@ func UpdateExpenseById(c echo.Context) error {
 	query := c.Param("id")
 	id, _ := strconv.Atoi(query)
 	expense := db.Expense{}
-	err := c.Bind(&expense)
-	if err != nil {
+	if err := c.Bind(&expense); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	response, erro := db.UpdateExpenseById(id, expense)
-	if erro != nil {
-		return c.JSON(http.StatusBadRequest, erro)
+	response, err := db.UpdateExpenseById(id, expense)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, response)
 }

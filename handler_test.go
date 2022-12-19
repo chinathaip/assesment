@@ -14,7 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// MIGRATE MOCKHANDLER(), NewServer, srv.Close() as Setup-Teardown
+func setup() *httptest.Server {
+	handler := MockHandler()
+	srv := httptest.NewServer(handler)
+	return srv
+}
+
+func teardown(srv *httptest.Server) {
+	srv.Close()
+}
+
 func MockHandler() *echo.Echo {
 	e := echo.New()
 
@@ -61,11 +70,9 @@ func MockHandler() *echo.Echo {
 
 // Story 1: As a user, I want to add a new expense So that I can track my expenses
 func TestAddNewExpense(t *testing.T) {
-	handler := MockHandler()
-	srv := httptest.NewServer(handler)
-	defer srv.Close()
+	srv := setup()
+	defer teardown(srv)
 
-	//Create a real struct out of this and reuse it with other tests
 	tests := []struct {
 		TestName string
 		Input    interface{}
@@ -107,9 +114,8 @@ func TestAddNewExpense(t *testing.T) {
 
 // Story 2: As a user, I want to see my expense by using expense ID So that I can check my expense information
 func TestGetExpenseById(t *testing.T) {
-	handler := MockHandler()
-	srv := httptest.NewServer(handler)
-	defer srv.Close()
+	srv := setup()
+	defer teardown(srv)
 
 	tests := []struct {
 		TestName string
@@ -142,9 +148,8 @@ func TestGetExpenseById(t *testing.T) {
 
 // Story 3: As a user, I want to update my expense So that I can correct my expense information
 func TestUpdateExpenseById(t *testing.T) {
-	handler := MockHandler()
-	srv := httptest.NewServer(handler)
-	defer srv.Close()
+	srv := setup()
+	defer teardown(srv)
 
 	tests := []struct {
 		TestName string
@@ -207,17 +212,16 @@ func TestUpdateExpenseById(t *testing.T) {
 	}
 }
 
+// Story 4: As a user, I want to see all my expenses So that I can check my expense information
 func TestGetAllExpense(t *testing.T) {
 	t.Run("Normal server return status OK", func(t *testing.T) {
-		handler := MockHandler()
-		srv := httptest.NewServer(handler)
-		defer srv.Close()
+		srv := setup()
+		defer teardown(srv)
 
 		url := fmt.Sprint(srv.URL + "/expenses")
 		resp, err := http.Get(url)
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.NoError(t, err)
-
 	})
 }
