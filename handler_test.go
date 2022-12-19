@@ -212,6 +212,7 @@ func TestUpdateExpenseById(t *testing.T) {
 	}
 }
 
+// Story 4: As a user, I want to see all my expenses So that I can check my expense information
 func TestGetAllExpense(t *testing.T) {
 	t.Run("Normal server return status OK", func(t *testing.T) {
 		srv := setup()
