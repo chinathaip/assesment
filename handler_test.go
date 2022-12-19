@@ -136,6 +136,7 @@ func TestGetExpenseById(t *testing.T) {
 	}
 }
 
+// Story 3: As a user, I want to update my expense So that I can correct my expense information
 func TestUpdateExpenseById(t *testing.T) {
 	handler := MockHandler()
 	srv := httptest.NewServer(handler)
