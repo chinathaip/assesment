@@ -41,6 +41,7 @@ func Disconnect() {
 	DB.Close()
 }
 
+// MAYBE NO NEED --> JUST get the row and read it just like Update and Get
 func InsertExpense(expense *Expense) Expense {
 	tags := expense.Tags
 	lastInsertId := 0
@@ -52,6 +53,7 @@ func InsertExpense(expense *Expense) Expense {
 	return *expense
 }
 
+// MISSING tags!!!
 func GetExpenseById(id int) (*Expense, error) {
 	row := DB.QueryRow("SELECT id, title, amount, note FROM expenses WHERE ID = $1", id)
 
@@ -62,8 +64,19 @@ func GetExpenseById(id int) (*Expense, error) {
 	// var tags []string
 	err := row.Scan(&eid, &title, &amount, &note)
 	if err != nil {
-		log.Printf("error retriving user by id %v", err)
+		log.Printf("error retriving expense by id %v", err)
 		return nil, err
 	}
 	return &Expense{ID: eid, Title: title, Amount: amount, Note: note}, nil
+}
+
+func UpdateExpenseById(id int, expense Expense) (*Expense, error) {
+	tags := expense.Tags
+	pq.Array(&tags)
+	_, err := DB.Exec("UPDATE expenses SET id = $1, title = $2, amount = $3, note = $4, tags = $5 WHERE id = $6", expense.ID, expense.Title, expense.Amount, expense.Note, pq.Array(&tags), id)
+	if err != nil {
+		log.Printf("error updating expense %v", err)
+		return nil, err
+	}
+	return &expense, nil
 }

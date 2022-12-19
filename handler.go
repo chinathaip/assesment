@@ -16,6 +16,8 @@ func CreateMainHandler() *echo.Echo {
 
 	e.POST("/expenses", AddNewExpense)
 	e.GET("/expenses/:id", GetExpenseById)
+	e.PUT("/expenses/:id", UpdateExpenseById)
+
 	return e
 }
 
@@ -39,9 +41,17 @@ func GetExpenseById(c echo.Context) error {
 	return c.JSON(http.StatusOK, expense)
 }
 
-// db.Expense{
-// 		Title:  "hi",
-// 		Amount: 1.4,
-// 		Note:   "some note",
-// 		Tags:   []string{"tag1", "tag2"},
-// 	}
+func UpdateExpenseById(c echo.Context) error {
+	query := c.Param("id")
+	id, _ := strconv.Atoi(query)
+	expense := db.Expense{}
+	err := c.Bind(&expense)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	response, erro := db.UpdateExpenseById(id, expense)
+	if erro != nil {
+		return c.JSON(http.StatusBadRequest, erro)
+	}
+	return c.JSON(http.StatusOK, response)
+}
