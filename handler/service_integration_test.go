@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -16,21 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//dont forget to put //go:build integration at the top
-
-func testConnection() {
-	for {
-		conn, err := net.DialTimeout("tcp", "localhost:2565", 3*time.Second)
-		if err != nil {
-			log.Println(err)
-		}
-		if conn != nil {
-			conn.Close()
-			break
-		}
-	}
-}
-
+// dont forget to put //go:build integration at the top
 func TestInsertExpense(t *testing.T) {
 	e := echo.New()
 	go func(e *echo.Echo) {
@@ -39,14 +24,15 @@ func TestInsertExpense(t *testing.T) {
 			log.Fatalf("something went wrong: %v\n", err)
 		}
 
-		h := NewHandler(db)
-		// e.GET("/expenses", h.HandleGetAllExpenses)
+		s := NewService(db)
+		h := New(*s)
 		e.POST("/expenses", h.HandleAddNewExpense)
 		e.Start(":2565")
 	}(e)
 
 	//wait for the server to respond
 	time.Sleep(2 * time.Second)
+
 	//arrange
 	url := "http://localhost:2565/expenses"
 	expense := Expense{

@@ -1,7 +1,6 @@
-package main
+package handler
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -9,11 +8,11 @@ import (
 )
 
 type Handler struct {
-	DB *sql.DB
+	Service Service
 }
 
-func NewHandler(db *sql.DB) *Handler {
-	return &Handler{DB: db}
+func New(s Service) *Handler {
+	return &Handler{Service: s}
 }
 
 func (h Handler) HandleAddNewExpense(c echo.Context) error {
@@ -21,14 +20,14 @@ func (h Handler) HandleAddNewExpense(c echo.Context) error {
 	if err := c.Bind(&expense); err != nil {
 		return c.JSON(http.StatusBadRequest, "bad request")
 	}
-	InsertExpense(h.DB, &expense)
+	h.Service.InsertExpense(&expense)
 	return c.JSON(http.StatusCreated, expense)
 }
 
 func (h Handler) HandleGetExpenseById(c echo.Context) error {
 	query := c.Param("id")
 	id, _ := strconv.Atoi(query)
-	expense, err := GetExpenseById(h.DB, id)
+	expense, err := h.Service.GetExpenseById(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "bad request")
 	}
@@ -42,7 +41,7 @@ func (h Handler) HandleUpdateExpenseById(c echo.Context) error {
 	if err := c.Bind(&expense); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	response, err := UpdateExpenseById(h.DB, id, expense)
+	response, err := h.Service.UpdateExpenseById(id, expense)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -50,7 +49,7 @@ func (h Handler) HandleUpdateExpenseById(c echo.Context) error {
 }
 
 func (h Handler) HandleGetAllExpenses(c echo.Context) error {
-	expenses, err := GetAllExpenses(h.DB)
+	expenses, err := h.Service.GetAllExpenses()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "something is wrong on our end, try again later")
 	}
