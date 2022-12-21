@@ -15,9 +15,21 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// higher order func (check if allow --> then call next)
+func middlewareCheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		authorization := c.Request().Header.Get("Authorization")
+		if authorization != "November 10, 2009" {
+			return c.String(http.StatusUnauthorized, "Unauthorized")
+		}
+		return next(c)
+	}
+}
+
 func NewApplication(handler *handler.Handler) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
+	e.Use(middlewareCheckAuth)
 
 	e.POST("/expenses", handler.HandleAddNewExpense)
 	e.GET("/expenses", handler.HandleGetAllExpenses)
