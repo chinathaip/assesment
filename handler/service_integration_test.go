@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package handler
 
 // dont forget to put //go:build integration at the top
