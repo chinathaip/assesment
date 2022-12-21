@@ -1,61 +1,56 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
-	"github.com/chinathaip/assesment/db"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
-func CreateMainHandler() *echo.Echo {
-	e := echo.New()
-	e.Use(middleware.Logger())
-
-	e.POST("/expenses", AddNewExpense)
-	e.GET("/expenses", GetAllExpenses)
-	e.GET("/expenses/:id", GetExpenseById)
-	e.PUT("/expenses/:id", UpdateExpenseById)
-
-	return e
+type Handler struct {
+	DB *sql.DB
 }
 
-func AddNewExpense(c echo.Context) error {
-	expense := db.Expense{}
+func NewHandler(db *sql.DB) *Handler {
+	return &Handler{DB: db}
+}
+
+func (h Handler) HandleAddNewExpense(c echo.Context) error {
+	expense := Expense{}
 	if err := c.Bind(&expense); err != nil {
 		return c.JSON(http.StatusBadRequest, "bad request")
 	}
-	db.InsertExpense(&expense)
+	InsertExpense(h.DB, &expense)
 	return c.JSON(http.StatusCreated, expense)
 }
 
-func GetExpenseById(c echo.Context) error {
+func (h Handler) HandleGetExpenseById(c echo.Context) error {
 	query := c.Param("id")
 	id, _ := strconv.Atoi(query)
-	expense, err := db.GetExpenseById(id)
+	expense, err := GetExpenseById(h.DB, id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "bad request")
 	}
 	return c.JSON(http.StatusOK, expense)
 }
 
-func UpdateExpenseById(c echo.Context) error {
+func (h Handler) HandleUpdateExpenseById(c echo.Context) error {
 	query := c.Param("id")
 	id, _ := strconv.Atoi(query)
-	expense := db.Expense{}
+	expense := Expense{}
 	if err := c.Bind(&expense); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	response, err := db.UpdateExpenseById(id, expense)
+	response, err := UpdateExpenseById(h.DB, id, expense)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, response)
 }
 
-func GetAllExpenses(c echo.Context) error {
-	expenses, err := db.GetAllExpenses()
+func (h Handler) HandleGetAllExpenses(c echo.Context) error {
+	expenses, err := GetAllExpenses(h.DB)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "something is wrong on our end, try again later")
 	}

@@ -11,7 +11,11 @@ services:
       context: .
       dockerfile: ./Dockerfile.it
 
-    volumes: -$PWD:/go/src/tests
+    ports:
+      - "2565:2565"
+
+    volumes:
+      - $PWD:/go/src/tests
     depends_on:
       # only run this service if service 'db' works correctly 
       - db

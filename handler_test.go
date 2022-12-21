@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/chinathaip/assesment/db"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +27,7 @@ func MockHandler() *echo.Echo {
 	e := echo.New()
 
 	e.POST("/expenses", func(c echo.Context) error {
-		expense := db.Expense{}
+		expense := Expense{}
 		if err := c.Bind(&expense); err != nil {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
@@ -57,7 +56,7 @@ func MockHandler() *echo.Echo {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
 
-		expense := db.Expense{}
+		expense := Expense{}
 		if err := c.Bind(&expense); err != nil {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
@@ -80,7 +79,7 @@ func TestAddNewExpense(t *testing.T) {
 	}{
 		{
 			TestName: "add valid expense should return status created",
-			Input: db.Expense{
+			Input: Expense{
 				Title:  "hi",
 				Amount: 1.4,
 				Note:   "some note",
@@ -160,7 +159,7 @@ func TestUpdateExpenseById(t *testing.T) {
 		{
 			TestName: "valid id and body should get status OK",
 			ID:       "1",
-			Body: db.Expense{
+			Body: Expense{
 				ID:     1,
 				Title:  "hi",
 				Amount: 1.4,
@@ -178,7 +177,7 @@ func TestUpdateExpenseById(t *testing.T) {
 		{
 			TestName: "invalid id but valid body should get status bad request",
 			ID:       "hello test tset test",
-			Body: db.Expense{
+			Body: Expense{
 				ID:     1,
 				Title:  "hi",
 				Amount: 1.4,

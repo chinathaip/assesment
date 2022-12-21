@@ -1,4 +1,4 @@
-package db
+package main
 
 import (
 	"database/sql"
@@ -41,10 +41,10 @@ func Disconnect() {
 	DB.Close()
 }
 
-func InsertExpense(expense *Expense) (*Expense, error) {
+func InsertExpense(db *sql.DB, expense *Expense) (*Expense, error) {
 	tags := expense.Tags
 	var id int64
-	err := DB.QueryRow("INSERT INTO expenses(title, amount, note, tags) VALUES ($1,$2,$3,$4) RETURNING id",
+	err := db.QueryRow("INSERT INTO expenses(title, amount, note, tags) VALUES ($1,$2,$3,$4) RETURNING id",
 		expense.Title, expense.Amount, expense.Note, pq.Array(&tags)).Scan(&id)
 	if err != nil {
 		log.Printf("error inserting expense to table %v\n", err)
@@ -54,16 +54,16 @@ func InsertExpense(expense *Expense) (*Expense, error) {
 	return expense, nil
 }
 
-func GetExpenseById(id int) (*Expense, error) {
-	row := DB.QueryRow("SELECT * FROM expenses WHERE ID = $1", id)
+func GetExpenseById(db *sql.DB, id int) (*Expense, error) {
+	row := db.QueryRow("SELECT * FROM expenses WHERE ID = $1", id)
 	expense, err := ScanRow(row)
 	return expense, err
 }
 
-func UpdateExpenseById(id int, expense Expense) (*Expense, error) {
+func UpdateExpenseById(db *sql.DB, id int, expense Expense) (*Expense, error) {
 	tags := expense.Tags
 	pq.Array(&tags)
-	_, err := DB.Exec("UPDATE expenses SET id = $1, title = $2, amount = $3, note = $4, tags = $5 WHERE id = $6",
+	_, err := db.Exec("UPDATE expenses SET id = $1, title = $2, amount = $3, note = $4, tags = $5 WHERE id = $6",
 		expense.ID, expense.Title, expense.Amount, expense.Note, pq.Array(&tags), id)
 	if err != nil {
 		log.Printf("error updating expense %v\n", err)
@@ -72,8 +72,8 @@ func UpdateExpenseById(id int, expense Expense) (*Expense, error) {
 	return &expense, nil
 }
 
-func GetAllExpenses() ([]Expense, error) {
-	rows, err := DB.Query("SELECT * FROM expenses")
+func GetAllExpenses(db *sql.DB) ([]Expense, error) {
+	rows, err := db.Query("SELECT * FROM expenses")
 	if err != nil {
 		log.Printf("error retrieving expenses %v\n", err)
 		return nil, err
