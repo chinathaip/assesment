@@ -1,0 +1,32 @@
+version: '3.2'
+
+networks:
+  db_integration_network:
+
+
+services:
+  # run Dockerfile.it script, 
+  integration_tests:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.it
+
+    volumes: -$PWD:/go/src/tests
+    depends_on:
+      # only run this service if service 'db' works correctly 
+      - db
+    networks:
+      - db_integration_network
+
+  db:
+    #setup postgres db for testing
+    image: postgres:12.12
+    environment:
+      POSTGRES_USER: testdb
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: test-it-db
+    restart: on-failure
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+    networks:
+      - db_integration_network
