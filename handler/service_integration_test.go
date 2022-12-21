@@ -126,3 +126,49 @@ func TestGetExpenseById(t *testing.T) {
 	}
 	assert.Equal(t, want, got)
 }
+
+func TestUpdateExpenseById(t *testing.T) {
+	// start server
+	e := echo.New()
+	go func(e *echo.Echo) {
+		db, err := sql.Open("postgres", "postgresql://testdb:1234@db/test-it-db?sslmode=disable")
+		if err != nil {
+			log.Fatalf("something went wrong: %v\n", err)
+		}
+		s := NewService(db)
+		h := New(*s)
+		e.POST("/expenses", h.HandleAddNewExpense)
+		e.GET("/expenses", h.HandleGetAllExpenses)
+		e.GET("/expenses/:id", h.HandleGetExpenseById)
+		e.PUT("/expenses/:id", h.HandleUpdateExpenseById)
+		e.Start(":2565")
+	}(e)
+	// wait for the server to start
+	time.Sleep(2 * time.Second)
+
+	//arrange
+	url := "http://localhost:2565/expenses/1"
+	expense := Expense{
+		ID:     1,
+		Title:  "Im changing this one",
+		Amount: 2,
+		Note:   "some note after changed",
+		Tags:   []string{"tag11", "tag22"},
+	}
+	body := newBody(t, expense)
+	req := newRequest(t, http.MethodPut, url, body)
+
+	//act
+	resp := sendRequest(t, req)
+
+	//assert
+	got := readResponse(t, resp)
+	want := &Expense{
+		ID:     1,
+		Title:  "Im changing this one",
+		Amount: 2,
+		Note:   "some note after changed",
+		Tags:   []string{"tag11", "tag22"},
+	}
+	assert.Equal(t, want, got)
+}
