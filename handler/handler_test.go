@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/chinathaip/assesment/db"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +27,7 @@ func MockHandler() *echo.Echo {
 	e := echo.New()
 
 	e.POST("/expenses", func(c echo.Context) error {
-		expense := db.Expense{}
+		expense := Expense{}
 		if err := c.Bind(&expense); err != nil {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
@@ -57,7 +56,7 @@ func MockHandler() *echo.Echo {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
 
-		expense := db.Expense{}
+		expense := Expense{}
 		if err := c.Bind(&expense); err != nil {
 			return c.JSON(http.StatusBadRequest, "bad request")
 		}
@@ -69,7 +68,7 @@ func MockHandler() *echo.Echo {
 }
 
 // Story 1: As a user, I want to add a new expense So that I can track my expenses
-func TestAddNewExpense(t *testing.T) {
+func TestHandleAddNewExpense(t *testing.T) {
 	srv := setup()
 	defer teardown(srv)
 
@@ -80,7 +79,7 @@ func TestAddNewExpense(t *testing.T) {
 	}{
 		{
 			TestName: "add valid expense should return status created",
-			Input: db.Expense{
+			Input: Expense{
 				Title:  "hi",
 				Amount: 1.4,
 				Note:   "some note",
@@ -113,7 +112,7 @@ func TestAddNewExpense(t *testing.T) {
 }
 
 // Story 2: As a user, I want to see my expense by using expense ID So that I can check my expense information
-func TestGetExpenseById(t *testing.T) {
+func TestHandleGetExpenseById(t *testing.T) {
 	srv := setup()
 	defer teardown(srv)
 
@@ -147,7 +146,7 @@ func TestGetExpenseById(t *testing.T) {
 }
 
 // Story 3: As a user, I want to update my expense So that I can correct my expense information
-func TestUpdateExpenseById(t *testing.T) {
+func TestHandleUpdateExpenseById(t *testing.T) {
 	srv := setup()
 	defer teardown(srv)
 
@@ -160,7 +159,7 @@ func TestUpdateExpenseById(t *testing.T) {
 		{
 			TestName: "valid id and body should get status OK",
 			ID:       "1",
-			Body: db.Expense{
+			Body: Expense{
 				ID:     1,
 				Title:  "hi",
 				Amount: 1.4,
@@ -178,7 +177,7 @@ func TestUpdateExpenseById(t *testing.T) {
 		{
 			TestName: "invalid id but valid body should get status bad request",
 			ID:       "hello test tset test",
-			Body: db.Expense{
+			Body: Expense{
 				ID:     1,
 				Title:  "hi",
 				Amount: 1.4,
@@ -213,7 +212,7 @@ func TestUpdateExpenseById(t *testing.T) {
 }
 
 // Story 4: As a user, I want to see all my expenses So that I can check my expense information
-func TestGetAllExpense(t *testing.T) {
+func TestHandleGetAllExpense(t *testing.T) {
 	t.Run("Normal server return status OK", func(t *testing.T) {
 		srv := setup()
 		defer teardown(srv)
