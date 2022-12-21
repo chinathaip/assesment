@@ -5,3 +5,5 @@
 		note TEXT,
 		tags TEXT[]
 	);
+
+	INSERT INTO expenses (title, amount, note, tags) VALUES ('hi', 1.4, 'some note', '{"tag1", "tag2"}')
