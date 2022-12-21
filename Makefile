@@ -1,2 +1,6 @@
 run:
 	DATABASE_URL=postgres://hhbonlde:FHtwcrPFGiSIONbiqMkSjAuHVFXIWmmX@floppy.db.elephantsql.com/hhbonlde PORT=:2565 go run .
+
+
+docker run:
+	docker run -e DATABASE_URL=postgres://hhbonlde:FHtwcrPFGiSIONbiqMkSjAuHVFXIWmmX@floppy.db.elephantsql.com/hhbonlde -e PORT=:2565 -p 2565:2565 kbtg-go-assesment
