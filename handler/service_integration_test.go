@@ -15,6 +15,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func newBody(t *testing.T, expense Expense) []byte {
+	body, err := json.Marshal(expense)
+	assert.NoError(t, err)
+	return body
+}
+
+func newRequest(t *testing.T, method, url string, body []byte) *http.Request {
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	assert.NoError(t, err)
+	return req
+}
+
+func sendRequest(t *testing.T, req *http.Request) *http.Response {
+	client := http.Client{}
+	resp, erro := client.Do(req)
+	assert.NoError(t, erro)
+	return resp
+}
+
+func readResponse(t *testing.T, resp *http.Response) *Expense {
+	result := &Expense{}
+	byteBody, erroo := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, erroo)
+	json.Unmarshal([]byte(byteBody), &result)
+	return result
+}
+
 // dont forget to put //go:build integration at the top
 func TestInsertExpense(t *testing.T) {
 	e := echo.New()
@@ -41,23 +69,14 @@ func TestInsertExpense(t *testing.T) {
 		Note:   "some note",
 		Tags:   []string{"tag1", "tag2"},
 	}
-
-	body, _ := json.Marshal(expense)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
-	assert.NoError(t, err)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	client := http.Client{}
+	body := newBody(t, expense)
+	req := newRequest(t, http.MethodPost, url, body)
 
 	//act
-	resp, erro := client.Do(req)
-	assert.NoError(t, erro)
-
-	got := &Expense{}
-	byteBody, erroo := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, erroo)
-	json.Unmarshal([]byte(byteBody), &got)
+	resp := sendRequest(t, req)
 
 	//assert
+	got := readResponse(t, resp)
 	want := &Expense{
 		ID:     1,
 		Title:  "hi",
@@ -66,5 +85,4 @@ func TestInsertExpense(t *testing.T) {
 		Tags:   []string{"tag1", "tag2"},
 	}
 	assert.Equal(t, got, want)
-
 }
