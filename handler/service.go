@@ -12,6 +12,14 @@ type Service struct {
 	DB *sql.DB
 }
 
+type ReadWriter interface {
+	CreateTable()
+	InsertExpense(expense *Expense) (*Expense, error)
+	GetExpenseById(id int) (*Expense, error)
+	UpdateExpenseById(id int, expense Expense) (*Expense, error)
+	GetAllExpenses() ([]Expense, error)
+}
+
 func NewService(db *sql.DB) *Service {
 	return &Service{DB: db}
 }

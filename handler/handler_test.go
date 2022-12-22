@@ -6,15 +6,38 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
+
+type MockService struct{}
+
+func (m MockService) CreateTable() {}
+func (m MockService) InsertExpense(expense *Expense) (*Expense, error) {
+	expense.ID = 1
+	return expense, nil
+}
+func (m MockService) GetExpenseById(id int) (*Expense, error) {
+	if id == 0 {
+		return nil, errors.New("invalid id")
+	}
+	return &Expense{}, nil
+}
+func (m MockService) UpdateExpenseById(id int, expense Expense) (*Expense, error) {
+	if id == 0 {
+		return nil, errors.New("invalid id")
+	}
+	return &Expense{}, nil
+}
+func (m MockService) GetAllExpenses() ([]Expense, error) {
+	return []Expense{{}}, nil
+}
 
 func setup() *httptest.Server {
 	handler := MockHandler()
@@ -28,44 +51,15 @@ func teardown(srv *httptest.Server) {
 
 func MockHandler() *echo.Echo {
 	e := echo.New()
+	handler := New(MockService{})
 
-	e.POST("/expenses", func(c echo.Context) error {
-		expense := Expense{}
-		if err := c.Bind(&expense); err != nil {
-			return c.JSON(http.StatusBadRequest, "bad request")
-		}
-		return c.JSON(http.StatusCreated, expense)
-	})
+	e.POST("/expenses", handler.HandleAddNewExpense)
 
-	e.GET("/expenses", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "OK")
-	})
+	e.GET("/expenses", handler.HandleGetAllExpenses)
 
-	e.GET("/expenses/:id", func(c echo.Context) error {
-		query := c.Param("id")
-		id, _ := strconv.Atoi(query)
+	e.GET("/expenses/:id", handler.HandleGetExpenseById)
 
-		if id == 0 {
-			return c.JSON(http.StatusBadRequest, "bad request")
-		}
-		return c.JSON(http.StatusOK, "OK")
-	})
-
-	e.PUT("/expenses/:id", func(c echo.Context) error {
-		query := c.Param("id")
-		id, _ := strconv.Atoi(query)
-
-		if id == 0 {
-			return c.JSON(http.StatusBadRequest, "bad request")
-		}
-
-		expense := Expense{}
-		if err := c.Bind(&expense); err != nil {
-			return c.JSON(http.StatusBadRequest, "bad request")
-		}
-
-		return c.JSON(http.StatusOK, "OK")
-	})
+	e.PUT("/expenses/:id", handler.HandleUpdateExpenseById)
 
 	return e
 }
