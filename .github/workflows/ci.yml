@@ -22,5 +22,11 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
+    - name: Unit Test
       run: go test -v --tags=unit ./...
+
+    - name: Docker compose down
+      run: docker-compose -f docker-compose.yml down
+
+    - name: Docker compose up
+      run: docker-compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from integration_tests
